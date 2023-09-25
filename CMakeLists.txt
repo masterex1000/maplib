@@ -1,0 +1,15 @@
+cmake_minimum_required(VERSION 3.1)
+
+project(maptool)
+
+# Game
+
+add_executable( maptool
+    src/main.cpp
+
+    src/mapflib/parser.cpp
+)
+
+target_include_directories(maptool PUBLIC include/ src/)
+target_compile_options(maptool PRIVATE -Wall)
+# target_link_libraries(game raylib)
