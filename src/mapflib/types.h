@@ -13,7 +13,7 @@ struct Vector3 {
     double x, y, z;
 };
 
-struct Brush {
+struct BrushFace {
     Vector3 planePoints[3];
 
     std::string imageId; // related to image in cache
@@ -22,6 +22,10 @@ struct Brush {
     Vector3 axisU, axisV;
 
     VECTOR_TYPE scaleX, scaleY;
+};
+
+struct Brush {
+    std::vector<BrushFace> faces;
 };
 
 struct Entity {

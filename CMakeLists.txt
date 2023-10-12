@@ -7,9 +7,10 @@ project(maptool)
 add_executable( maptool
     src/main.cpp
 
-    src/mapflib/parser.cpp
+    src/mapflib/mapparser.cpp
 )
 
+target_compile_features(maptool PUBLIC cxx_std_17)
 target_include_directories(maptool PUBLIC include/ src/)
 target_compile_options(maptool PRIVATE -Wall)
 # target_link_libraries(game raylib)

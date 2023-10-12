@@ -12,3 +12,22 @@ There are two major pieces to this project
 Just a couple links that are helpful for understanding the project/format
 
 https://book.leveldesignbook.com/appendix/resources/formats/map
+
+
+# Grammer
+
+--- Defined by parser ---
+Number
+String
+Quoted
+
+--- Parse Rules ---
+
+Root -> Entity*
+
+Entity -> "{" (Property | Brush )* "}"
+Property -> Quoted Quoted
+Brush -> "{" Vector3 Vector3 Vector3 String TextureAxis TextureAxis Number Number Number "}"
+
+Vector3 -> "(" Number Number Number ")"
+TextureAxis -> "[" Number Number Number "]"
