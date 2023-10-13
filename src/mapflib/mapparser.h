@@ -19,7 +19,10 @@ namespace MapFLib {
     bool parseEntity(std::istream &stream, MapFLib::Entity &entity);
     bool parseEntityProperty(std::istream &stream, std::string &key, std::string &value);
     bool parseEntityBrush(std::istream &stream, MapFLib::Brush &brush);
-    bool praseVector3(std::istream &stream, MapFLib::Vector3 &vector);
-    bool parseTextureAxis(std::istream &stream, MapFLib::Brush);
+    bool parseBrushFace(std::istream &istream, MapFLib::BrushFace &face);
+    bool parseVector3(std::istream &stream, MapFLib::Vector3 &vector);
+    bool parseTextureAxis(std::istream &stream, MapFLib::TextureAxis &axis);
     bool parseComment(std::istream &stream); // Handles lines that only contain comment that starts with "//"
+
+    void const printMapFile(const MapFLib::MapFileData &map);
 }

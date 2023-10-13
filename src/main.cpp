@@ -11,6 +11,8 @@ int testStuff() {
 
     MapFLib::parseMapFile(map, fs);
 
+    MapFLib::printMapFile(map); // Test if we have a similar output
+
     return 0;
 }
 

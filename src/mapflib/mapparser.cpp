@@ -44,7 +44,6 @@ using namespace MapFLib;
 // }
 
 bool expect(std::istream &stream, std::string str) {
-
     long startLocation = stream.tellg();
 
     std::string testString;
@@ -57,6 +56,39 @@ bool expect(std::istream &stream, std::string str) {
         stream.seekg(startLocation);
         return false;
     }
+}
+
+bool expectStartsWith(std::istream &stream, std::string str) {
+    long startLocation = stream.tellg();
+
+    std::string testString;
+
+    stream >> testString;
+
+    if(testString.rfind(str, 0) == 0) {
+        return true;
+    } else {
+        stream.seekg(startLocation);
+        return false;
+    }
+}
+
+bool expectChar(std::istream &stream, char c) {
+    long startLocation = stream.tellg();
+
+    stream >> std::ws;
+
+    std::cout << "Value " << stream.peek() << "\n";
+
+    if(stream.peek() != (int) c) {
+        stream.seekg(startLocation);
+        return false;
+    }
+
+    // Succeded, so actually consume char
+    stream.get();
+
+    return true;
 }
 
 bool MapFLib::parseEntity(std::istream &stream, MapFLib::Entity &entity) {
@@ -122,18 +154,114 @@ bool MapFLib::parseEntityProperty(std::istream &stream, std::string &key, std::s
 }
 
 bool MapFLib::parseEntityBrush(std::istream &stream, MapFLib::Brush &brush) {
+    long startLocation = stream.tellg();
+
+    if(expect(stream, "{")) {
+        // printf("Brush: Failed to read first quote\n")
+        stream.seekg(startLocation);
+        return false;
+    }
+
+    BrushFace face;
+    while(true) {
+        if(expect(stream, "}")) {
+            return true;
+        } else if(parseBrushFace(stream, face)) {
+            brush.faces.push_back(face);
+            face = BrushFace(); // Reset brushface
+        } else {
+            stream.seekg(startLocation);
+            return false;
+        }
+    }
+
     return false;
 }
 
-bool MapFLib::praseVector3(std::istream &stream, MapFLib::Vector3 &vector);
-bool MapFLib::parseTextureAxis(std::istream &stream, MapFLib::Brush brush);
+bool MapFLib::parseBrushFace(std::istream &stream, MapFLib::BrushFace &face) {
+    long startLocation = stream.tellg();
+
+    if(!(parseVector3(stream, face.planePoints[0]) &&
+         parseVector3(stream, face.planePoints[1]) &&
+         parseVector3(stream, face.planePoints[2]))) {
+        stream.seekg(startLocation);
+        return false;
+    }
+
+    stream >> face.imageId;
+    if(!stream) {
+        stream.seekg(startLocation);
+        return false;
+    }
+
+    if(!( parseTextureAxis(stream, face.axisU) || parseTextureAxis(stream, face.axisV))) {
+        stream.seekg(startLocation);
+        std::cout << "Failed to read texture uv data. Make sure map is in valve format (standard format not supported)\n";
+        return false;
+    }
+
+    stream >> face.rot >> face.scaleX >> face.scaleY;
+
+    if(!stream) {
+        stream.seekg(startLocation);
+        return false;
+    }
+
+    return true;
+}
+
+bool MapFLib::parseVector3(std::istream &stream, MapFLib::Vector3 &vector) {
+    long startLocation = stream.tellg();
+
+    if(!expectChar(stream, '(')) {
+        stream.seekg(startLocation);
+        return false;
+    }
+
+    stream >> vector.x >> vector.y >> vector.z;
+
+    if(!stream) {
+        stream.seekg(startLocation);
+        return false;
+    }
+
+    if(!expectChar(stream, ')')) {
+        stream.seekg(startLocation);
+        return false;
+    }
+
+    return true;
+}
+
+bool MapFLib::parseTextureAxis(std::istream &stream, MapFLib::TextureAxis &axis) {
+    long startLocation = stream.tellg();
+
+    if(!expectChar(stream, '[')) {
+        stream.seekg(startLocation);
+        return false;
+    }
+
+    stream >> axis.x >> axis.y >> axis.z >> axis.offset;
+
+    if(!stream) {
+        stream.seekg(startLocation);
+        return false;
+    }
+
+    if(!expectChar(stream, ']')) {
+        stream.seekg(startLocation);
+        return false;
+    }
+
+    return true;
+}
 
 bool MapFLib::parseComment(std::istream &stream) {
     long startLocation = stream.tellg();
 
     stream >> std::ws;
 
-    if(!expect(stream, "//")) {
+    if(!expectStartsWith(stream, "//")) {
         stream.seekg(startLocation);
         return false;
     }
@@ -148,13 +276,55 @@ int MapFLib::parseMapFile(MapFileData &map, std::istream& stream) {
 
     Entity entity = Entity();
 
-    while(parseEntity(stream, entity)) {
-        // We have an entity
-        map.entities.push_back(entity);
-        entity = Entity(); // Reinitalize to nothing
+    while(true) {
+        if(parseComment(stream)) {
+            printf("map file read comment\n");
+        } else if(parseEntity(stream, entity)) {
+            // We have an entity
+            map.entities.push_back(entity);
+            entity = Entity(); // Reinitalize to nothing
+        } else {
+            break;
+        }
     }
+
+    std::cout << "contains " << map.entities.size() << " entites \n";
 
     return 0;
 }
 
-// std::string read
+void const MapFLib::printMapFile(const MapFLib::MapFileData &map) {
+    for(const MapFLib::Entity &entity : map.entities) {
+
+        std::cout << "{\n";
+
+        for(auto p : entity.properties) {
+            std::cout << "\t" << std::quoted(p.first) << " " << std::quoted(p.second) << "\n";
+        }
+
+        std::cout << "\n";
+
+        for(auto b : entity.brushes) {
+            std::cout << "\t{\n";
+
+            for(auto f : b.faces) {
+                std::cout << "\t\t";
+
+                std::cout << "(" << f.planePoints[0].x << f.planePoints[0].y << f.planePoints[0].z << ") ";
+                std::cout << "(" << f.planePoints[1].x << f.planePoints[2].y << f.planePoints[3].z << ") ";
+                std::cout << "(" << f.planePoints[2].x << f.planePoints[3].y << f.planePoints[4].z << ") ";
+
+                std::cout << f.imageId;
+
+                std::cout << "[ " << f.axisU.x << f.axisU.y << f.axisU.z << f.axisU.offset << " ] ";
+                std::cout << "[ " << f.axisV.x << f.axisV.y << f.axisV.z << f.axisV.offset << " ] ";
+
+                std::cout << f.rot << f.scaleX << f.scaleY << "\n";
+            }
+
+            std::cout << "\t}\n";
+        }
+
+        std::cout << "}\n\n";
+    }
+}
