@@ -4,6 +4,7 @@
 #include <map>
 #include <string>
 #include <unordered_set>
+#include <unordered_map>
 
 #define VECTOR_TYPE double
 
@@ -20,7 +21,7 @@ struct TextureAxis {
 struct BrushFace {
     Vector3 planePoints[3];
 
-    std::string imageId; // related to image in cache
+    int imageId; // related to image in cache
 
     // Valve format (we don't care about quake tbh)
     TextureAxis axisU, axisV;
@@ -43,7 +44,26 @@ struct Entity {
 struct MapFileData {
     std::vector<Entity> entities;
 
-    std::unordered_set<std::string> textureList;
+    std::vector<std::string> textureList;
+    std::unordered_map<std::string, int> textureLookup;
+};
+
+// Map Polygon data
+
+struct PolygonGeometry {
+    std::vector<Vector3> verts;
+};
+
+struct BrushGeometry {
+    std::vector<PolygonGeometry> polys;
+};
+
+struct EntityGeometry {
+    std::vector<BrushGeometry> brushes;
+};
+
+struct MapGeometry {
+    std::vector<EntityGeometry> entities;
 };
 
 } // namespace MapFLib

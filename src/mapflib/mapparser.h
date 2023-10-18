@@ -17,10 +17,10 @@ namespace MapFLib {
 
     int parseMapFile(MapFLib::MapFileData &map, std::istream& stream);
 
-    bool parseEntity(std::istream &stream, MapFLib::Entity &entity);
+    bool parseEntity(std::istream &stream, MapFLib::MapFileData &map, MapFLib::Entity &entity);
     bool parseEntityProperty(std::istream &stream, std::string &key, std::string &value);
-    bool parseEntityBrush(std::istream &stream, MapFLib::Brush &brush);
-    bool parseBrushFace(std::istream &istream, MapFLib::BrushFace &face);
+    bool parseEntityBrush(std::istream &stream, MapFLib::MapFileData &map, MapFLib::Brush &brush);
+    bool parseBrushFace(std::istream &istream, MapFLib::MapFileData &map, MapFLib::BrushFace &face);
     bool parseVector3(std::istream &stream, MapFLib::Vector3 &vector);
     bool parseTextureAxis(std::istream &stream, MapFLib::TextureAxis &axis);
     bool parseComment(std::istream &stream); // Handles lines that only contain comment that starts with "//"

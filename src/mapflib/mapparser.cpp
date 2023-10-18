@@ -8,6 +8,156 @@
 
 using namespace MapFLib;
 
+int MapFLib::parseMapFile(MapFileData &map, std::istream& stream) {
+    Entity entity = Entity();
+
+    while(true) {
+        if(parseComment(stream)) {
+            // printf("map file read comment\n");
+        } else if(parseEntity(stream, map, entity)) {
+            // We have an entity
+            map.entities.push_back(entity);
+            entity = Entity(); // Reinitalize to nothing
+        } else {
+            break;
+        }
+    }
+
+    std::cout << "contains " << map.entities.size() << " entites \n";
+
+    return 0;
+}
+
+bool MapFLib::parseEntity(std::istream &stream, MapFLib::MapFileData &map, MapFLib::Entity &entity) {
+    long startLocation = stream.tellg();
+
+    if(!expect(stream, "{")) return false; // Syntax Error (entity starts with bracket)
+
+    std::string key, value;
+    Brush brush;
+
+    while(true) {
+        if(parseComment(stream)) {
+            continue;
+        } else if(expect(stream, "}")) {
+            return true; // Done parsing entity
+        } else if(parseEntityProperty(stream, key, value)) {
+            entity.properties[key] = value;
+        } else if(parseEntityBrush(stream, map, brush)) {
+            entity.brushes.push_back(brush);
+            brush = Brush(); // Reset brush
+        } else {
+            stream.seekg(startLocation);
+            return false; // Syntax Error (our only parsing routes failed)
+        }
+    }
+}
+
+bool MapFLib::parseEntityProperty(std::istream &stream, std::string &key, std::string &value) {
+    long startLocation = stream.tellg();
+
+    stream >> std::ws;
+
+    if(!strictQuoted(stream, key)) {
+        stream.seekg(startLocation);
+        return false;
+    }
+
+    if(!strictQuoted(stream, value)) {
+        stream.seekg(startLocation);
+        return false;
+    }
+
+    return true;
+}
+
+bool MapFLib::parseEntityBrush(std::istream &stream, MapFLib::MapFileData &map, MapFLib::Brush &brush) {
+    long startLocation = stream.tellg();
+
+    if(!expect(stream, "{")) {
+        // printf("Brush: Failed to read first quote\n")
+        stream.seekg(startLocation);
+        return false;
+    }
+
+    BrushFace face;
+    while(true) {
+        if(expect(stream, "}")) {
+            return true;
+        } else if(parseBrushFace(stream, map, face)) {
+            brush.faces.push_back(face);
+            face = BrushFace(); // Reset brushface
+        } else {
+            stream.seekg(startLocation);
+            return false;
+        }
+    }
+
+    return false;
+}
+
+bool MapFLib::parseBrushFace(std::istream &stream, MapFLib::MapFileData &map, MapFLib::BrushFace &face) {
+    long startLocation = stream.tellg();
+
+    if(!(parseVector3(stream, face.planePoints[0]) &&
+         parseVector3(stream, face.planePoints[1]) &&
+         parseVector3(stream, face.planePoints[2]))) {
+        stream.seekg(startLocation);
+        return false;
+    }
+
+    std::string textureName;
+    stream >> textureName;
+
+    // Add to texture list if it doesn't already exist
+    auto textureQuery = map.textureLookup.find(textureName);
+    if(auto search = map.textureLookup.find(textureName); search != map.textureLookup.end()) {
+        face.imageId = search->second;
+    } else {
+        int textureId = map.textureList.size();
+        map.textureList.push_back(textureName);
+        map.textureLookup[textureName] = textureId;
+        face.imageId = textureId;
+    }
+
+    if(!stream) {
+        stream.seekg(startLocation);
+        return false;
+    }
+
+    if(!( parseTextureAxis(stream, face.axisU) && parseTextureAxis(stream, face.axisV))) {
+        stream.seekg(startLocation);
+        std::cout << "Failed to read texture uv data. Make sure map is in valve format (standard texture format not supported)\n";
+        // TODO: we totally could support the standard map format
+        return false;
+    }
+
+    stream >> face.rot >> face.scaleX >> face.scaleY;
+
+    if(!stream) {
+        stream.seekg(startLocation);
+        return false;
+    }
+
+    return true;
+}
+
+bool MapFLib::parseComment(std::istream &stream) {
+    long startLocation = stream.tellg();
+
+    stream >> std::ws;
+
+    if(!expectStartsWith(stream, "//")) {
+        stream.seekg(startLocation);
+        return false;
+    }
+
+    std::string s;
+    std::getline(stream, s); // Just ignore
+
+    return true;
+}
+
 bool MapFLib::expect(std::istream &stream, std::string str) {
     long startLocation = stream.tellg();
 
@@ -54,31 +204,6 @@ bool MapFLib::expectChar(std::istream &stream, char c) {
     return true;
 }
 
-bool MapFLib::parseEntity(std::istream &stream, MapFLib::Entity &entity) {
-    long startLocation = stream.tellg();
-
-    if(!expect(stream, "{")) return false; // Syntax Error (entity starts with bracket)
-
-    std::string key, value;
-    Brush brush;
-
-    while(true) {
-        if(parseComment(stream)) {
-            continue;
-        } else if(expect(stream, "}")) {
-            return true; // Done parsing entity
-        } else if(parseEntityProperty(stream, key, value)) {
-            entity.properties[key] = value;
-        } else if(parseEntityBrush(stream, brush)) {
-            entity.brushes.push_back(brush);
-            brush = Brush(); // Reset brush
-        } else {
-            stream.seekg(startLocation);
-            return false; // Syntax Error (our only parsing routes failed)
-        }
-    }
-}
-
 bool strictQuoted(std::istream &stream, std::string &s, char delim = '\"') {
     long startLocation = stream.tellg();
 
@@ -96,82 +221,6 @@ bool strictQuoted(std::istream &stream, std::string &s, char delim = '\"') {
         stream.seekg(startLocation);
 
     return (bool) stream; // Return its good status
-}
-
-bool MapFLib::parseEntityProperty(std::istream &stream, std::string &key, std::string &value) {
-    long startLocation = stream.tellg();
-
-    stream >> std::ws;
-
-    if(!strictQuoted(stream, key)) {
-        stream.seekg(startLocation);
-        return false;
-    }
-
-    if(!strictQuoted(stream, value)) {
-        stream.seekg(startLocation);
-        return false;
-    }
-
-    return true;
-}
-
-bool MapFLib::parseEntityBrush(std::istream &stream, MapFLib::Brush &brush) {
-    long startLocation = stream.tellg();
-
-    if(!expect(stream, "{")) {
-        // printf("Brush: Failed to read first quote\n")
-        stream.seekg(startLocation);
-        return false;
-    }
-
-    BrushFace face;
-    while(true) {
-        if(expect(stream, "}")) {
-            return true;
-        } else if(parseBrushFace(stream, face)) {
-            brush.faces.push_back(face);
-            face = BrushFace(); // Reset brushface
-        } else {
-            stream.seekg(startLocation);
-            return false;
-        }
-    }
-
-    return false;
-}
-
-bool MapFLib::parseBrushFace(std::istream &stream, MapFLib::BrushFace &face) {
-    long startLocation = stream.tellg();
-
-    if(!(parseVector3(stream, face.planePoints[0]) &&
-         parseVector3(stream, face.planePoints[1]) &&
-         parseVector3(stream, face.planePoints[2]))) {
-        stream.seekg(startLocation);
-        return false;
-    }
-
-    stream >> face.imageId;
-    if(!stream) {
-        stream.seekg(startLocation);
-        return false;
-    }
-
-    if(!( parseTextureAxis(stream, face.axisU) && parseTextureAxis(stream, face.axisV))) {
-        stream.seekg(startLocation);
-        std::cout << "Failed to read texture uv data. Make sure map is in valve format (standard texture format not supported)\n";
-        // TODO: we totally could support the standard map format
-        return false;
-    }
-
-    stream >> face.rot >> face.scaleX >> face.scaleY;
-
-    if(!stream) {
-        stream.seekg(startLocation);
-        return false;
-    }
-
-    return true;
 }
 
 bool MapFLib::parseVector3(std::istream &stream, MapFLib::Vector3 &vector) {
@@ -218,43 +267,6 @@ bool MapFLib::parseTextureAxis(std::istream &stream, MapFLib::TextureAxis &axis)
     }
 
     return true;
-}
-
-bool MapFLib::parseComment(std::istream &stream) {
-    long startLocation = stream.tellg();
-
-    stream >> std::ws;
-
-    if(!expectStartsWith(stream, "//")) {
-        stream.seekg(startLocation);
-        return false;
-    }
-
-    std::string s;
-    std::getline(stream, s); // Just ignore
-
-    return true;
-}
-
-int MapFLib::parseMapFile(MapFileData &map, std::istream& stream) {
-
-    Entity entity = Entity();
-
-    while(true) {
-        if(parseComment(stream)) {
-            // printf("map file read comment\n");
-        } else if(parseEntity(stream, entity)) {
-            // We have an entity
-            map.entities.push_back(entity);
-            entity = Entity(); // Reinitalize to nothing
-        } else {
-            break;
-        }
-    }
-
-    std::cout << "contains " << map.entities.size() << " entites \n";
-
-    return 0;
 }
 
 void MapFLib::printMapFile(const MapFLib::MapFileData &map, std::ostream &stream) {

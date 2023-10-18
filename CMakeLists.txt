@@ -16,6 +16,7 @@ add_executable( testmapflib
     src/test.cpp
 
     src/mapflib/mapparser.cpp
+    src/mapflib/mapbuilder.cpp
 )
 
 target_compile_features(testmapflib PUBLIC cxx_std_17)

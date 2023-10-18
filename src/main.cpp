@@ -6,6 +6,7 @@
 
 int testStuff() {
     MapFLib::MapFileData map;
+    // MapFLib::MapGeometry mapGeo;
 
     std::fstream fs;
     fs.open("../test/minimal.map", std::fstream::in | std::ios::binary);
@@ -13,6 +14,8 @@ int testStuff() {
     MapFLib::parseMapFile(map, fs);
 
     MapFLib::printMapFile(map, std::cout); // Test if we have a similar output
+
+    // MapFLib::generateMeshData(map);
 
     return 0;
 }
