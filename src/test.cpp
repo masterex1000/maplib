@@ -211,18 +211,13 @@ static void all_tests() {
     mu_run_test(test_mfl_parseBrushFace);
     mu_run_test(test_mfl_parseEntityBrush);
     mu_run_test(test_mfl_parseEntityProperty);
+
+    // TODO: add tests for parseEntity && parseMap
 }
 
 int main(int argc, char **argv) {
-    // const char *result = all_tests();
-    // if (result != 0) {
-    //     printf("%s\n", result);
-    // }
-    // else {
-    //     printf("ALL TESTS PASSED\n");
-    // }
-
     all_tests();
+
     printf("Tests run: %d\n", tests_run);
     printf("Tests failed: %d\n", tests_failed);
 

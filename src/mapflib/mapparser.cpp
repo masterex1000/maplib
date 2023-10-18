@@ -43,8 +43,6 @@ bool MapFLib::expectChar(std::istream &stream, char c) {
 
     stream >> std::ws;
 
-    // std::cout << "Value " << stream.peek() << "\n";
-
     if(stream.peek() != (int) c) {
         stream.seekg(startLocation);
         return false;
@@ -161,7 +159,8 @@ bool MapFLib::parseBrushFace(std::istream &stream, MapFLib::BrushFace &face) {
 
     if(!( parseTextureAxis(stream, face.axisU) && parseTextureAxis(stream, face.axisV))) {
         stream.seekg(startLocation);
-        std::cout << "Failed to read texture uv data. Make sure map is in valve format (standard format not supported)\n";
+        std::cout << "Failed to read texture uv data. Make sure map is in valve format (standard texture format not supported)\n";
+        // TODO: we totally could support the standard map format
         return false;
     }
 
