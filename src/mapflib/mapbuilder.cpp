@@ -4,4 +4,4 @@ int MapFLib::buildMapGeometry(MapFLib::MapGeometry &geo, MapFLib::MapFileData &m
     
 }
 
-int MapFLib::buildEntityGeometry(MapFLib::EntityGeometry &entity, MapFLib)
+// int MapFLib::buildEntityGeometry(MapFLib::EntityGeometry &entity, MapFLib)
