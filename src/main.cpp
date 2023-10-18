@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <fstream>
+#include <iostream>
 
 #include "mapflib/mapparser.h"
 
@@ -7,11 +8,11 @@ int testStuff() {
     MapFLib::MapFileData map;
 
     std::fstream fs;
-    fs.open("../test/basic.map", std::fstream::in);
+    fs.open("../test/minimal.map", std::fstream::in | std::ios::binary);
 
     MapFLib::parseMapFile(map, fs);
 
-    MapFLib::printMapFile(map); // Test if we have a similar output
+    MapFLib::printMapFile(map, std::cout); // Test if we have a similar output
 
     return 0;
 }

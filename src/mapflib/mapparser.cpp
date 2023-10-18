@@ -3,47 +3,12 @@
 
 #include <iomanip>
 #include <iostream>
+#include <ostream>
 #include <sstream>
 
 using namespace MapFLib;
 
-// int MapFLib::parseMapFile(MapFLib::MapFileData &map, std::istream& stream) {
-//     ParserState state = PARSER_STATE_ROOT;
-
-//     Entity *currentEntity = NULL;
-//     Brush *currentBrush = NULL;
-
-//     std::string line;
-//     while(getline(stream >> std::ws, line)) {
-
-//         std::istringstream lineStream(line);
-
-//         switch (state) {
-//         case PARSER_STATE_ROOT:
-//             if(std::string value; lineStream >> value && value == "{") {
-//                 state = PARSER_STATE_ENTITY;
-
-//                 currentEntity = new Entity();
-//             }
-//             break;
-//         case PARSER_STATE_ENTITY:
-//             parseEntityLine(currentEntity, state, lineStream);
-//             break;
-//         default:
-//             break;
-//         }
-//     }
-
-//     return 0;
-// }
-
-// int MapFLib::parseEntityLine(Entity* entity, ParserState &state, std::istream stream) {
-//     if((stream >> std::ws).peek() == std::char_traits<char>::to_int_type('"')) {
-        
-//     }
-// }
-
-bool expect(std::istream &stream, std::string str) {
+bool MapFLib::expect(std::istream &stream, std::string str) {
     long startLocation = stream.tellg();
 
     std::string testString;
@@ -58,7 +23,7 @@ bool expect(std::istream &stream, std::string str) {
     }
 }
 
-bool expectStartsWith(std::istream &stream, std::string str) {
+bool MapFLib::expectStartsWith(std::istream &stream, std::string str) {
     long startLocation = stream.tellg();
 
     std::string testString;
@@ -73,12 +38,12 @@ bool expectStartsWith(std::istream &stream, std::string str) {
     }
 }
 
-bool expectChar(std::istream &stream, char c) {
+bool MapFLib::expectChar(std::istream &stream, char c) {
     long startLocation = stream.tellg();
 
     stream >> std::ws;
 
-    std::cout << "Value " << stream.peek() << "\n";
+    // std::cout << "Value " << stream.peek() << "\n";
 
     if(stream.peek() != (int) c) {
         stream.seekg(startLocation);
@@ -156,7 +121,7 @@ bool MapFLib::parseEntityProperty(std::istream &stream, std::string &key, std::s
 bool MapFLib::parseEntityBrush(std::istream &stream, MapFLib::Brush &brush) {
     long startLocation = stream.tellg();
 
-    if(expect(stream, "{")) {
+    if(!expect(stream, "{")) {
         // printf("Brush: Failed to read first quote\n")
         stream.seekg(startLocation);
         return false;
@@ -194,7 +159,7 @@ bool MapFLib::parseBrushFace(std::istream &stream, MapFLib::BrushFace &face) {
         return false;
     }
 
-    if(!( parseTextureAxis(stream, face.axisU) || parseTextureAxis(stream, face.axisV))) {
+    if(!( parseTextureAxis(stream, face.axisU) && parseTextureAxis(stream, face.axisV))) {
         stream.seekg(startLocation);
         std::cout << "Failed to read texture uv data. Make sure map is in valve format (standard format not supported)\n";
         return false;
@@ -278,7 +243,7 @@ int MapFLib::parseMapFile(MapFileData &map, std::istream& stream) {
 
     while(true) {
         if(parseComment(stream)) {
-            printf("map file read comment\n");
+            // printf("map file read comment\n");
         } else if(parseEntity(stream, entity)) {
             // We have an entity
             map.entities.push_back(entity);
@@ -293,38 +258,49 @@ int MapFLib::parseMapFile(MapFileData &map, std::istream& stream) {
     return 0;
 }
 
-void const MapFLib::printMapFile(const MapFLib::MapFileData &map) {
+void MapFLib::printMapFile(const MapFLib::MapFileData &map, std::ostream &stream) {
     for(const MapFLib::Entity &entity : map.entities) {
-
-        std::cout << "{\n";
-
-        for(auto p : entity.properties) {
-            std::cout << "\t" << std::quoted(p.first) << " " << std::quoted(p.second) << "\n";
-        }
-
-        std::cout << "\n";
-
-        for(auto b : entity.brushes) {
-            std::cout << "\t{\n";
-
-            for(auto f : b.faces) {
-                std::cout << "\t\t";
-
-                std::cout << "(" << f.planePoints[0].x << f.planePoints[0].y << f.planePoints[0].z << ") ";
-                std::cout << "(" << f.planePoints[1].x << f.planePoints[2].y << f.planePoints[3].z << ") ";
-                std::cout << "(" << f.planePoints[2].x << f.planePoints[3].y << f.planePoints[4].z << ") ";
-
-                std::cout << f.imageId;
-
-                std::cout << "[ " << f.axisU.x << f.axisU.y << f.axisU.z << f.axisU.offset << " ] ";
-                std::cout << "[ " << f.axisV.x << f.axisV.y << f.axisV.z << f.axisV.offset << " ] ";
-
-                std::cout << f.rot << f.scaleX << f.scaleY << "\n";
-            }
-
-            std::cout << "\t}\n";
-        }
-
-        std::cout << "}\n\n";
+        printEntity(entity, stream);
     }
+}
+
+void MapFLib::printEntity(const MapFLib::Entity &entity, std::ostream &stream) {
+    stream << "{\n";
+
+    for(auto p : entity.properties) {
+        stream << "\t" << std::quoted(p.first) << " " << std::quoted(p.second) << "\n";
+    }
+
+    stream << "\n";
+
+    for(auto b : entity.brushes) {
+        printEntityBrush(b, stream);
+    }
+
+    stream << "}\n\n";
+}
+
+void MapFLib::printEntityBrush(const MapFLib::Brush &b, std::ostream &stream) {
+    stream << "\t{\n";
+
+    for(auto f : b.faces) {
+        stream << "\t\t";
+
+        printBrushFace(f, stream);
+    }
+
+    stream << "\t}\n";
+}
+
+void MapFLib::printBrushFace(const MapFLib::BrushFace &f, std::ostream &stream) {
+    stream << "(" << f.planePoints[0].x << " " << f.planePoints[0].y << " " << f.planePoints[0].z << ") ";
+    stream << "(" << f.planePoints[1].x << " " << f.planePoints[1].y << " " << f.planePoints[1].z << ") ";
+    stream << "(" << f.planePoints[2].x << " " << f.planePoints[2].y << " " << f.planePoints[2].z << ") ";
+
+    stream << f.imageId << " ";
+
+    stream << "[ " << f.axisU.x << " " << f.axisU.y << " " << f.axisU.z << " " << f.axisU.offset << " ] ";
+    stream << "[ " << f.axisV.x << " " << f.axisV.y << " " << f.axisV.z << " " << f.axisV.offset << " ] ";
+
+    stream << f.rot << " " << f.scaleX << " " << f.scaleY << "\n";
 }

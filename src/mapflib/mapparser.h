@@ -3,6 +3,7 @@
 #include <istream>
 #include <string>
 #include <sstream>
+#include <ostream>
 
 #include "types.h"
 
@@ -24,5 +25,13 @@ namespace MapFLib {
     bool parseTextureAxis(std::istream &stream, MapFLib::TextureAxis &axis);
     bool parseComment(std::istream &stream); // Handles lines that only contain comment that starts with "//"
 
-    void const printMapFile(const MapFLib::MapFileData &map);
+    void printMapFile(const MapFLib::MapFileData &map, std::ostream &stream);
+    void printEntity(const MapFLib::Entity &entity, std::ostream &stream);
+    void printEntityBrush(const MapFLib::Brush &b, std::ostream &stream);
+    void printBrushFace(const MapFLib::BrushFace &f, std::ostream &stream);
+
+    // Parsing helper functions
+    bool expect(std::istream &stream, std::string str);
+    bool expectStartsWith(std::istream &stream, std::string str);
+    bool expectChar(std::istream &stream, char c);
 }
