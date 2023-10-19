@@ -7,6 +7,12 @@ There are two major pieces to this project
  - maptool - cli frontend to the library that can output .obj and entity definition (in a custom, very simple to parse format) files
 
 
+## Dependencies
+
+To install, download Eigen3. Build with cmake (outlined in INSTALL file in repo)
+Set `EIGEN3_ROOT` enviroment variable to root of install folder
+Done!
+
 # Helpful Links
 
 Just a couple links that are helpful for understanding the project/format

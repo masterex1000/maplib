@@ -1,6 +1,12 @@
-cmake_minimum_required(VERSION 3.1)
+cmake_minimum_required(VERSION 3.12)
 
 project(maptool)
+
+# list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+# find_package(Eigen3 REQUIRED)
+
+# message(${EIGEN3_INCLUDE_DIR})
+# message(${CMAKE_MODULE_PATH})
 
 add_executable( maptool
     src/main.cpp

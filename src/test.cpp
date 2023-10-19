@@ -6,6 +6,8 @@
 #include "minunit.h"
 #include <mapflib/mapparser.h>
 
+#include "mapflib/linalg.h"
+
 int tests_run = 0;
 int tests_failed = 0;
 
@@ -15,7 +17,6 @@ int mu_status = 0;
 
 int foo = 7;
 int bar = 4;
-
 
 static void test_mfl_expect() {
     std::istringstream stream("} ");
@@ -132,28 +133,30 @@ static void test_mfl_parseVector3() {
 static void test_mfl_parseBrushFace() {
     std::istringstream stream("b (1 2 3) (3 4 5) (6 7 8) __TB_empty [ 1 2 3 4 ] [ 6 7 8 9 ] 0 1 2 c");
 
+    MapFLib::MapFileData blankMapData;
     long pos = stream.tellg();
     MapFLib::BrushFace face;
-    mu_assert("should fail to parse non-brush face", !MapFLib::parseBrushFace(stream, face));
+    mu_assert("should fail to parse non-brush face", !MapFLib::parseBrushFace(stream, blankMapData, face));
     mu_assert("shouldn't move after failed read", pos == stream.tellg());
     
     char blank;
     stream >>blank;
     pos = stream.tellg();
 
-    mu_assert("should properly parse correct brush face", MapFLib::parseBrushFace(stream, face));
+    mu_assert("should properly parse correct brush face", MapFLib::parseBrushFace(stream, blankMapData, face));
     mu_assert("stream should move forward after successful parse", pos < stream.tellg());
     mu_assert("stream should only consume brush face", MapFLib::expectChar(stream, 'c'));
 }
 
 static void test_mfl_parseEntityBrush() {
+    MapFLib::MapFileData blankMapData;
     MapFLib::Brush originalBrush;
 
     originalBrush.faces.push_back((MapFLib::BrushFace) {
         (MapFLib::Vector3) {1, 2, 3},
         (MapFLib::Vector3) {4, 5, 6},
         (MapFLib::Vector3) {7, 8, 9},
-        "blank",
+        0,
         (MapFLib::TextureAxis) {0, 1, 3, 4},
         (MapFLib::TextureAxis) {5, 6, 7, 8},
         0, 0, 0 
@@ -167,14 +170,14 @@ static void test_mfl_parseEntityBrush() {
     long pos = stream.tellg();
     MapFLib::Brush b;
 
-    mu_assert("should fail to parse non-brush", !MapFLib::parseEntityBrush(stream, b));
+    mu_assert("should fail to parse non-brush", !MapFLib::parseEntityBrush(stream, blankMapData, b));
     mu_assert("stream shouldn't move forward after unsuccessful parse", pos == stream.tellg());
     
     char blank;
     stream >> blank;
     pos = stream.tellg();
 
-    mu_assert("parses correct brush", MapFLib::parseEntityBrush(stream, b));
+    mu_assert("parses correct brush", MapFLib::parseEntityBrush(stream, blankMapData, b));
     mu_assert("stream moves forward after sucessful parse", pos < stream.tellg());
     mu_assert("stream only consumes brush", MapFLib::expectChar(stream, 'b'));
 }
@@ -201,7 +204,7 @@ static void test_mfl_parseEntityProperty() {
     mu_assert("only consumed entity property", MapFLib::expectChar(stream, 'b'));
 }
 
-static void all_tests() {
+static void mfl_parse_tests() {
     mu_run_test(test_mfl_expect);
     mu_run_test(test_mfl_expectStartsWith);
     mu_run_test(test_mfl_expectChar);
@@ -213,6 +216,20 @@ static void all_tests() {
     mu_run_test(test_mfl_parseEntityProperty);
 
     // TODO: add tests for parseEntity && parseMap
+}
+
+static void test_eigen_stuff() {
+    linalg::aliases::double3 a{1, 2, 3};
+    linalg::aliases::double3 b{1, 2, 3};
+
+    auto c = a + b;
+    std::cout << linalg::dot(a, b) << "\n";
+    std::cout << c.x << " " << c.y << " " << c.z << "\n";
+}
+
+static void all_tests() {
+    mfl_parse_tests();
+    test_eigen_stuff();
 }
 
 int main(int argc, char **argv) {

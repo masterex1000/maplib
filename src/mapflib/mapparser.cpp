@@ -8,6 +8,8 @@
 
 using namespace MapFLib;
 
+bool strictQuoted(std::istream &stream, std::string &s, char delim = '\"');
+
 int MapFLib::parseMapFile(MapFileData &map, std::istream& stream) {
     Entity entity = Entity();
 
@@ -110,7 +112,6 @@ bool MapFLib::parseBrushFace(std::istream &stream, MapFLib::MapFileData &map, Ma
     stream >> textureName;
 
     // Add to texture list if it doesn't already exist
-    auto textureQuery = map.textureLookup.find(textureName);
     if(auto search = map.textureLookup.find(textureName); search != map.textureLookup.end()) {
         face.imageId = search->second;
     } else {
@@ -204,7 +205,7 @@ bool MapFLib::expectChar(std::istream &stream, char c) {
     return true;
 }
 
-bool strictQuoted(std::istream &stream, std::string &s, char delim = '\"') {
+bool strictQuoted(std::istream &stream, std::string &s, char delim) {
     long startLocation = stream.tellg();
 
     stream >> std::ws;
