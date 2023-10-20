@@ -219,12 +219,12 @@ static void mfl_parse_tests() {
 }
 
 static void test_eigen_stuff() {
-    linalg::aliases::double3 a{1, 2, 3};
-    linalg::aliases::double3 b{1, 2, 3};
+    // linalg::aliases::double3 a{1, 2, 3};
+    // linalg::aliases::double3 b{1, 2, 3};
 
-    auto c = a + b;
-    std::cout << linalg::dot(a, b) << "\n";
-    std::cout << c.x << " " << c.y << " " << c.z << "\n";
+    // auto c = a + b;
+    // std::cout << linalg::dot(a, b) << "\n";
+    // std::cout << c.x << " " << c.y << " " << c.z << "\n";
 }
 
 static void all_tests() {

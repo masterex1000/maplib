@@ -6,29 +6,30 @@
 #include <unordered_set>
 #include <unordered_map>
 
-#define VECTOR_TYPE double
+#include "linalg.h"
 
 namespace MapFLib {
 
-struct Vector3 {
-    double x, y, z;
-};
+constexpr double CMP_EPSILON = 0.000001;
 
 struct TextureAxis {
     double x, y, z, offset;
 };
 
 struct BrushFace {
-    Vector3 planePoints[3];
+    linalg::aliases::double3 planePoints[3];
 
     int imageId; // related to image in cache
+
+    linalg::aliases::double3 normal;
+    double dist;
 
     // Valve format (we don't care about quake tbh)
     TextureAxis axisU, axisV;
 
-    VECTOR_TYPE rot;
+    double rot;
 
-    VECTOR_TYPE scaleX, scaleY;
+    double scaleX, scaleY;
 };
 
 struct Brush {
@@ -51,7 +52,8 @@ struct MapFileData {
 // Map Polygon data
 
 struct PolygonGeometry {
-    std::vector<Vector3> verts;
+    std::vector<linalg::aliases::double3> verts;
+    std::vector
 };
 
 struct BrushGeometry {

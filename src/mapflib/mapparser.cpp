@@ -8,6 +8,8 @@
 
 using namespace MapFLib;
 
+using namespace linalg::aliases;
+
 bool strictQuoted(std::istream &stream, std::string &s, char delim = '\"');
 
 int MapFLib::parseMapFile(MapFileData &map, std::istream& stream) {
@@ -98,6 +100,12 @@ bool MapFLib::parseEntityBrush(std::istream &stream, MapFLib::MapFileData &map, 
     return false;
 }
 
+void convertThreePointsToNormalPlane(const double3 &p0, const double3 &p1, const double3 &p2, double3 &outNormal, double &outDistance) {
+    using namespace linalg;
+    outNormal = normalize(cross( (p1 - p0), (p2 - p0) ));
+    outDistance = dot( outNormal, p0);
+}
+
 bool MapFLib::parseBrushFace(std::istream &stream, MapFLib::MapFileData &map, MapFLib::BrushFace &face) {
     long startLocation = stream.tellg();
 
@@ -107,6 +115,9 @@ bool MapFLib::parseBrushFace(std::istream &stream, MapFLib::MapFileData &map, Ma
         stream.seekg(startLocation);
         return false;
     }
+
+    // Assign face plane normal/distance
+    convertThreePointsToNormalPlane(face.planePoints[0], face.planePoints[1], face.planePoints[2], face.normal, face.dist);
 
     std::string textureName;
     stream >> textureName;
