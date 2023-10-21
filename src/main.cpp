@@ -3,6 +3,7 @@
 #include <iostream>
 
 #include "raymath.h"
+#include "stb_ds.h"
 #include <mapflib/qma/qmap.h>
 
 #include "argh.h"
@@ -22,12 +23,33 @@ using std::cerr;
 using std::endl;
 
 
+// int outputEntity
+
+
 int runApplication(const ApplicationOptions &options) {
+
+    QMapData map = { 0 };
+    QMapMapGeometry map_geo = { 0 };
+
+    if(!map_parse(options.mapFile.c_str(), &map)) {
+        cerr << "Unable to load map file '" << options.mapFile << "'" << endl;
+        return 1;
+    }
+
+    if(options.verbose) {
+        cout << "Referenced Textures" << endl << "---------------------------" << endl;
+        for(int i = 0; i < arrlen(map.textureIndex); i++) {
+            cout << i << " : " << map.textureIndex[i] << endl;
+        }
+    }
+
+    map_geo = map_generate_geometry(&map);
+
     return 0;
 }
 
+
 int main(int argc, char** argv) {
-    
     ApplicationOptions options;
 
     argh::parser cmdl;
