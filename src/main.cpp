@@ -52,8 +52,6 @@ int main(int argc, char** argv) {
         return 0;
     }
 
-    // TODO: add message if no filename
-
     options.verbose = cmdl[{"-v", "--help"}];
     
     if(!(cmdl({"-w", "--textureWidth"}, options.textureWidth) >> options.textureWidth)) {
@@ -67,6 +65,13 @@ int main(int argc, char** argv) {
     }
 
     options.objPath = cmdl({"-o", "--objpath"}, "./").str();
+
+    if(!cmdl(1)) {
+        cout << "No map file provided" << endl;
+        return 1;
+    }
+
+    options.mapFile = cmdl(1).str();
 
     // cout << "Positional args:\n";
     // for (auto& pos_arg : cmdl)
