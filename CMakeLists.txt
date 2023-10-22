@@ -4,6 +4,7 @@ project(maptool)
 
 add_executable( maptool
     src/main.cpp
+    src/ModelBuilder.cpp
 
     src/mapflib/qma/qmap.cpp
 )

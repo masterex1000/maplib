@@ -1,10 +1,13 @@
 #include <stdio.h>
 #include <fstream>
 #include <iostream>
+#include <vector>
 
 #include "raymath.h"
 #include "stb_ds.h"
 #include <mapflib/qma/qmap.h>
+
+#include "types.h"
 
 #include "argh.h"
 
@@ -22,14 +25,23 @@ using std::cout;
 using std::cerr;
 using std::endl;
 
+void exportModelAsObj() {
 
-// int outputEntity
+}
 
+
+// void (const ApplicationOptions &options, const QMapData &map, const QMapMapGeometry &map_geo) {
+    // Extract all entity geometry in map
+    // Write obj file
+// }
 
 int runApplication(const ApplicationOptions &options) {
 
     QMapData map = { 0 };
     QMapMapGeometry map_geo = { 0 };
+
+
+    // Load map
 
     if(!map_parse(options.mapFile.c_str(), &map)) {
         cerr << "Unable to load map file '" << options.mapFile << "'" << endl;
@@ -44,6 +56,12 @@ int runApplication(const ApplicationOptions &options) {
     }
 
     map_geo = map_generate_geometry(&map);
+
+    // extract map geometry
+    // write to obj file
+    // write entity definitions (probably just in the obj file as bad extension)
+
+    // buildObjFile(options, map, map_geo);
 
     return 0;
 }
