@@ -4,6 +4,8 @@
 #include <vector>
 #include <map>
 #include <functional>
+#include <unordered_map>
+#include "raymath.h"
 
 namespace maptool {
 
@@ -17,6 +19,7 @@ struct MaterialGroup {
 
 struct MeshObject {
     std::string name;
+    std::unordered_map<std::string, std::string> params;
     std::vector<MaterialGroup> subMeshes;
 
     MeshObject(std::string name) : name(name) {}
@@ -54,12 +57,14 @@ public:
     void setObject(std::string objectName);
     void setMaterial(std::string material);
     void addVertex(Vector3 pos, Vector2 tex, Vector3 normal); // Every three calls is a triangle
+    void addParameter(std::string key, std::string value);
 
     Model getModel() { return model; }
 
 private:
     void updateCurrentObject();
     void updateCurrentMaterial();
+    void setCurrentTarget();
 };
 
 

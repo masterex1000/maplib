@@ -81,10 +81,10 @@ bool map_parse_line(QMapParserState *state, char *buf, size_t buf_len) {
             state->parser_state = MPP_BRUSH;
             state->curBrush = map_brush_init();
             
-            // printf("\t[ -- New QMapBrush -- ]\n");
+            printf("\t[ -- New QMapBrush -- ]\n");
         } else if(strncmp(buf, "}", 1) == 0) {
             state->parser_state = MPP_FILE;
-            // printf("[ -- End of entity -- ]\n");
+            printf("[ -- End of entity -- ]\n");
 
             arrput(state->map.entitys, state->curEntity);
         } else {
@@ -95,7 +95,7 @@ bool map_parse_line(QMapParserState *state, char *buf, size_t buf_len) {
                 return false; // Not a valid line
             }
 
-            // printf("\t[ Name : '%s', Value : '%s' ]\n", pname, pval);
+            printf("\t[ Name : '%s', Value : '%s' ]\n", pname, pval);
 
             shput(state->curEntity.props, pname, pval);
         }
@@ -103,7 +103,7 @@ bool map_parse_line(QMapParserState *state, char *buf, size_t buf_len) {
         if(strncmp(buf, "}", 1) == 0) {
             state->parser_state = MPP_ENTITY;
             arrput(state->curEntity.b, state->curBrush);
-            // printf("\t[ -- End of QMapBrush -- ]\n");
+            printf("\t[ -- End of QMapBrush -- ]\n");
         } else {
             QMapFace fce;
 

@@ -2,6 +2,8 @@
 #include "mapflib/qma/qmap.h"
 #include "types.h"
 
+#include <stdint.h>
+
 size_t maptool::lossyHash(Vector2 vector) {
     size_t h1 = std::hash<uint64_t>{}( (uint64_t)(vector.x * 1000) );
     size_t h2 = std::hash<uint64_t>{}( (uint64_t)(vector.y * 1000) );
@@ -60,12 +62,16 @@ void maptool::ModelBuilder::updateCurrentMaterial() {
     }
 }
 
-void maptool::ModelBuilder::addVertex(Vector3 pos, Vector2 tex, Vector3 normal) {
+void maptool::ModelBuilder::setCurrentTarget() {
     if(currentObject == NULL)
         updateCurrentObject();
 
     if(currentMaterialGroup == NULL)
         updateCurrentMaterial();
+}
+
+void maptool::ModelBuilder::addVertex(Vector3 pos, Vector2 tex, Vector3 normal) {
+    setCurrentTarget();
 
     // Check if pos dup already exists. If so use its id, else add new vertex
     int posIndex  = maptool::addVertexToTables(posLookup, model.vertices, pos);
@@ -75,4 +81,11 @@ void maptool::ModelBuilder::addVertex(Vector3 pos, Vector2 tex, Vector3 normal) 
     // Add the ver indicies to currentMaterialGroup
 
     currentMaterialGroup->coords.push_back({posIndex, texIndex, normIndex});
+}
+
+void maptool::ModelBuilder::addParameter(std::string key, std::string value) {
+    if(currentObject == NULL)
+        updateCurrentObject();
+    
+    currentObject->params[key] = value;
 }

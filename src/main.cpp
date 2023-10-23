@@ -25,66 +25,81 @@ using std::cout;
 using std::cerr;
 using std::endl;
 
+
+void collectUsedTextures(std::set<int> &usedTextures, QMapEntity *ent) {
+    for(int b = 0; b < arrlen(ent->b); b++) {
+        QMapBrush *brush = &ent->b[b];
+
+        for(int f = 0; f < arrlen(brush->faces); f++)
+            usedTextures.insert(brush->faces[f].texture);
+    }
+}
+
+void extractBrushGeometry(maptool::ModelBuilder &mb, QMapBrush *brush, QMapBrushGeometry *brush_geo, int texId) {
+    for(int f = 0; f < arrlen(brush->faces); f++) {
+        QMapFace *face = &brush->faces[f];
+        QMapFaceGeometry *face_geo = &brush_geo->faces[f];
+
+        if(face->texture != texId)
+            continue;
+
+        for(int i = 0; i < arrlen(face_geo->indices); i++) {
+            QMapFaceVertex vert = face_geo->vertices[face_geo->indices[i]];
+
+            Vector3 posVec  = DoubleVector3ToVector3(vert.pos);
+            Vector3 normVec = DoubleVector3ToVector3(vert.normal);
+            Vector2 texCoords = vert.uv;
+
+            mb.addVertex(posVec, texCoords, normVec);
+        }
+    }
+}
+
 maptool::Model extractMapGeometry(QMapData &map, QMapMapGeometry &map_geo) {
     maptool::ModelBuilder mb;
-
-    int asdf = arrlen(map.entitys);
 
     for(int e = 0; e < arrlen(map.entitys); e++) {
         QMapEntity *ent = &map.entitys[e];
         QMapEntityGeometry *ent_geo = &map_geo.entitys[e];
-
-        // Iterate over all of this entity's brushes, building a list of used textures
-        std::set<int> usedTextures;
 
         std::ostringstream objectNameStream;
         objectNameStream << "Entity" << e;
 
         mb.setObject(objectNameStream.str());
 
-        for(int b = 0; b < arrlen(ent->b); b++) {
-            QMapBrush *brush = &ent->b[b];
+        // Populate entity's property list
+        for(int p = 0; p < shlen(ent->props); p++) {
+            const char *key = ent->props[p].key;
+            const char *value = ent->props[p].value;
 
-            for(int f = 0; f < arrlen(brush->faces); f++)
-                usedTextures.insert(brush->faces[f].texture);
+            mb.addParameter(key, value);
         }
 
+        // Iterate over all of this entity's brushes, building a list of used textures
+        std::set<int> usedTextures;
+
+        collectUsedTextures(usedTextures, ent);
+        
         for(int texId : usedTextures) {
-            mb.setMaterial(map.textureIndex[texId]);
+            std::string textureName = map.textureIndex[texId];
+
+            // Probably should have a way to not hardcode this... but whatever
+            if(textureName == "noclip")
+                continue;
+
+            mb.setMaterial(textureName);
 
             for(int b = 0; b < arrlen(ent->b); b++) {
                 QMapBrush *brush = &ent->b[b];
                 QMapBrushGeometry *brush_geo = &ent_geo->brushes[b];
 
-                for(int f = 0; f < arrlen(brush->faces); f++) {
-                    QMapFace *face = &brush->faces[f];
-                    QMapFaceGeometry *face_geo = &brush_geo->faces[f];
-
-                    if(face->texture != texId)
-                        continue;
-
-                    for(int i = 0; i < arrlen(face_geo->indices); i++) {
-                        QMapFaceVertex vert = face_geo->vertices[face_geo->indices[i]];
-
-                        Vector3 posVec  = DoubleVector3ToVector3(vert.pos);
-                        Vector3 normVec = DoubleVector3ToVector3(vert.normal);
-                        Vector2 texCoords = vert.uv;
-
-                        mb.addVertex(posVec, texCoords, normVec);
-                    }
-                }
+                extractBrushGeometry(mb, brush, brush_geo, texId);
             }
         }
     }
 
     return mb.getModel();
 }
-
-
-// void (const ApplicationOptions &options, const QMapData &map, const QMapMapGeometry &map_geo) {
-    // Extract all entity geometry in map
-    // Write obj file
-// }
 
 int runApplication(const ApplicationOptions &options) {
 
@@ -93,7 +108,6 @@ int runApplication(const ApplicationOptions &options) {
 
 
     // Load map
-
     if(!map_parse(options.mapFile.c_str(), &map)) {
         cerr << "Unable to load map file '" << options.mapFile << "'" << endl;
         return 1;
@@ -108,10 +122,8 @@ int runApplication(const ApplicationOptions &options) {
 
     map_geo = map_generate_geometry(&map);
 
-    // extract map geometry
     maptool::Model mapGeometry = extractMapGeometry(map, map_geo);
     // write to obj file
-    // write entity definitions (probably just in the obj file itself as a shitty unoffical extension)
 
     // buildObjFile(options, map, map_geo);
 
@@ -126,7 +138,7 @@ int main(int argc, char** argv) {
     cmdl.add_params({
         "-w", "--textureWidth",
         "-h", "--textureHeight",
-        "-o", "--objpath"
+        "-o", "--output"
     });
 
     cmdl.parse(argc, argv);
@@ -137,8 +149,7 @@ int main(int argc, char** argv) {
         cout << "  -v, --verbose    output a diagnostic thought map compile process\n";
         cout << "  -w, --textureWidth=...   Sets the texture size used by the compiler to calculate UVs" << endl;
         cout << "  -h, --textureHeight=...  Sets the texture size used by the compiler to calculate UVs" << endl;
-        cout << "  -o, --objpath=...    Sets the path to store the obj files used to repersent entity brush data" << endl;
-        cout << "                       defaults to cwd" << endl;
+        cout << "  -o, --output=... Sets the path that the output obj file will be located at (defaults to a.obj)" << endl;
         cout << "      --help   display this help and exit" << endl;
 
         return 0;
@@ -156,10 +167,10 @@ int main(int argc, char** argv) {
         return 1;
     }
 
-    options.objPath = cmdl({"-o", "--objpath"}, "./").str();
+    options.objPath = cmdl({"-o", "--output"}, "a.obj").str();
 
     if(!cmdl(1)) {
-        cout << "No map file provided" << endl;
+        cerr << "No map file provided" << endl;
         return 1;
     }
 
