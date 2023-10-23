@@ -2,6 +2,7 @@
 #include <fstream>
 #include <iostream>
 #include <vector>
+#include <iomanip>
 
 #include "raymath.h"
 #include "stb_ds.h"
@@ -10,6 +11,11 @@
 #include "types.h"
 
 #include "argh.h"
+
+#define MAPTOOL_MAJOR_VERSION 1
+#define MAPTOOL_MINOR_VERSION 0
+#define MAPTOOL_REVISION 0
+#define MAPTOOL_VERSION "1.0dev"
 
 struct ApplicationOptions {
     bool verbose = false;
@@ -21,10 +27,12 @@ struct ApplicationOptions {
     int textureHeight = 128;
 };
 
+int map_defaultTextureWidth = 128;
+int map_defaultTextureHeight = 128;
+
 using std::cout;
 using std::cerr;
 using std::endl;
-
 
 void collectUsedTextures(std::set<int> &usedTextures, QMapEntity *ent) {
     for(int b = 0; b < arrlen(ent->b); b++) {
@@ -101,11 +109,59 @@ maptool::Model extractMapGeometry(QMapData &map, QMapMapGeometry &map_geo) {
     return mb.getModel();
 }
 
-int runApplication(const ApplicationOptions &options) {
+void writeObjectToFile(std::ofstream &out, const maptool::Model &model, const maptool::MeshObject &o) {
+    out << "o " << o.name << "\n";
+    
+    for(auto subMesh : o.subMeshes) {
+        out << "s 0\n";
+        out << "useMtl " << subMesh.materialName << "\n";
+        
+        for(int vertex = 0; vertex < (int) subMesh.coords.size(); vertex++) {
+            if(vertex % 3 == 0) {
+                if(vertex != 0)
+                    out << "\n";
+                out << "f ";
+            }
 
+            auto v = subMesh.coords[vertex];
+            
+            out << (v[0] + 1) << "/" << (v[1] + 1) << "/" << (v[2] + 1) << " ";
+        }
+
+        out << "\n";
+    }
+
+    for(auto param : o.params) {
+        out << "eparam " << std::quoted(param.first) << " " << std::quoted(param.second) << "\n";
+    }
+}
+
+void writeVerticesToFile(std::ofstream &out, const maptool::Model &model) {
+    // NOTE: Y AND Z ARE SWAPPED!!!! (swizzling)
+    for(auto v : model.vertices)
+        out << "v " << -v.x << " " << v.z << " " << v.y << "\n";
+    for(auto v : model.textureVerts)
+        out << "vt " << v.x << " " << v.y << "\n";
+    for(auto v : model.normalVerts)
+        out << "vn " << -v.x << " " << v.z << " " << v.y << "\n";
+}
+
+void writeModelToFile(std::ofstream &out, const maptool::Model &model) {
+    out << "# Maptool " << MAPTOOL_VERSION << "\n";
+    
+    writeVerticesToFile(out, model);
+
+    for(auto o : model.objects) {
+        writeObjectToFile(out, model, o);
+    }
+}
+
+int runApplication(const ApplicationOptions &options) {
     QMapData map = { 0 };
     QMapMapGeometry map_geo = { 0 };
 
+    map_defaultTextureWidth = options.textureWidth;
+    map_defaultTextureHeight = options.textureHeight;
 
     // Load map
     if(!map_parse(options.mapFile.c_str(), &map)) {
@@ -125,7 +181,13 @@ int runApplication(const ApplicationOptions &options) {
     maptool::Model mapGeometry = extractMapGeometry(map, map_geo);
     // write to obj file
 
-    // buildObjFile(options, map, map_geo);
+    std::ofstream objFile(options.objPath);
+    if(!objFile) {
+        const auto e = errno;
+        cerr << "can't open file " << options.objPath << " for writing: " << strerror(e);
+    }
+
+    writeModelToFile(objFile, mapGeometry);
 
     return 0;
 }
@@ -145,25 +207,30 @@ int main(int argc, char** argv) {
 
     if(cmdl[{"-h", "--help"}]) {
         cout << "Usage: " << cmdl[0] << " [OPTION]... mapfile\n";
-        cout << "      --version    display the version of the program" << endl;
+        cout << "      --version    display the version of the program\n";
         cout << "  -v, --verbose    output a diagnostic thought map compile process\n";
-        cout << "  -w, --textureWidth=...   Sets the texture size used by the compiler to calculate UVs" << endl;
-        cout << "  -h, --textureHeight=...  Sets the texture size used by the compiler to calculate UVs" << endl;
-        cout << "  -o, --output=... Sets the path that the output obj file will be located at (defaults to a.obj)" << endl;
-        cout << "      --help   display this help and exit" << endl;
+        cout << "  -w, --textureWidth=...   Sets the texture size used by the compiler to calculate UVs\n";
+        cout << "  -h, --textureHeight=...  Sets the texture size used by the compiler to calculate UVs\n";
+        cout << "  -o, --output=... Sets the path that the output obj file will be located at (defaults to a.obj)\n";
+        cout << "      --help   display this help and exit\n";
 
+        return 0;
+    }
+
+    if(cmdl["--version"]) {
+        cout << "Maptool Version " << MAPTOOL_VERSION << "\n";
         return 0;
     }
 
     options.verbose = cmdl[{"-v", "--help"}];
     
     if(!(cmdl({"-w", "--textureWidth"}, options.textureWidth) >> options.textureWidth)) {
-        cerr << "Invalid width parameter '" << cmdl({"-w", "textureWidth"}).str() << "'" << endl;
+        cerr << "Invalid width parameter '" << cmdl({"-w", "textureWidth"}).str() << "'\n";
         return 1;
     }
 
     if(!(cmdl({"-h", "--textureHeight"}, options.textureHeight) >> options.textureHeight)) {
-        cerr << "Invalid height parameter '" << cmdl({"-h", "textureHeight"}).str() << "'" << endl;
+        cerr << "Invalid height parameter '" << cmdl({"-h", "textureHeight"}).str() << "'\n";
         return 1;
     }
 

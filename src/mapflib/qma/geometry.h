@@ -98,7 +98,8 @@ QMapMapGeometry map_generate_geometry(QMapData *map) {
             brush->center = (DoubleVector3) {0, 0, 0};
 
             // TODO implement phong shading parameter test! (Maybe, im just going to default to phong shading for now....)
-            map_generate_brush_geometry(brush, brush_geo, true, map);
+            // map_generate_brush_geometry(brush, brush_geo, true, map);
+            map_generate_brush_geometry(brush, brush_geo, false, map);
 
             for(int f = 0; f < arrlen(brush_geo->faces); f++) {
                 QMapFaceGeometry *face_geo = &brush_geo->faces[f];

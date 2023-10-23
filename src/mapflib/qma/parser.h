@@ -14,6 +14,9 @@ QMapBrush map_brush_init();
 
 #ifdef QMAP_IMP
 
+extern int map_defaultTextureWidth;
+extern int map_defaultTextureHeight;
+
 #define MPP_FILE 0
 #define MPP_ENTITY 1
 #define MPP_BRUSH 2
@@ -71,7 +74,7 @@ bool map_parse_line(QMapParserState *state, char *buf, size_t buf_len) {
     } else if(state->parser_state == MPP_FILE) {
         if(strncmp(buf, "{", 1) == 0) {
             state->parser_state = MPP_ENTITY;
-            printf("[ -- New QMapEntity -- ]\n");
+            // printf("[ -- New QMapEntity -- ]\n");
 
             state->curEntity = map_entity_init();
         } else
@@ -81,10 +84,10 @@ bool map_parse_line(QMapParserState *state, char *buf, size_t buf_len) {
             state->parser_state = MPP_BRUSH;
             state->curBrush = map_brush_init();
             
-            printf("\t[ -- New QMapBrush -- ]\n");
+            // printf("\t[ -- New QMapBrush -- ]\n");
         } else if(strncmp(buf, "}", 1) == 0) {
             state->parser_state = MPP_FILE;
-            printf("[ -- End of entity -- ]\n");
+            // printf("[ -- End of entity -- ]\n");
 
             arrput(state->map.entitys, state->curEntity);
         } else {
@@ -95,7 +98,7 @@ bool map_parse_line(QMapParserState *state, char *buf, size_t buf_len) {
                 return false; // Not a valid line
             }
 
-            printf("\t[ Name : '%s', Value : '%s' ]\n", pname, pval);
+            // printf("\t[ Name : '%s', Value : '%s' ]\n", pname, pval);
 
             shput(state->curEntity.props, pname, pval);
         }
@@ -103,7 +106,7 @@ bool map_parse_line(QMapParserState *state, char *buf, size_t buf_len) {
         if(strncmp(buf, "}", 1) == 0) {
             state->parser_state = MPP_ENTITY;
             arrput(state->curEntity.b, state->curBrush);
-            printf("\t[ -- End of QMapBrush -- ]\n");
+            // printf("\t[ -- End of QMapBrush -- ]\n");
         } else {
             QMapFace fce;
 
@@ -117,8 +120,6 @@ bool map_parse_line(QMapParserState *state, char *buf, size_t buf_len) {
 }
 
 bool map_parse_param(const char *str, char **name, char **value) {
-    // char c;
-    // bool isInQuotes = false;
     char n[255];
     char v[255];
 
@@ -162,19 +163,6 @@ bool map_parse_brush_face(QMapParserState *state, const char *str, QMapFace *fac
         &face->v1.x, &face->v1.y, &face->v1.z,
         &face->v2.x, &face->v2.y, &face->v2.z,
         texture_name, &position);
-
-    // int count = sscanf(str, " ( %f %f %f ) ( %f %f %f ) ( %f %f %f ) %254[a-zA-Z0-9_/] %n",
-    //     &face->v0.x, &face->v0.z, &face->v0.y,
-    //     &face->v1.x, &face->v1.z, &face->v1.y,
-    //     &face->v2.x, &face->v2.z, &face->v2.y,
-    //     texture_name, &position);
-
-
-
-    // printf("(%f %f %f), (%f %f %f), (%f %f %f), %s, %d\n", face->a.x, face->a.y, face->a.z, face->b.x, face->b.y, face->b.z, face->c.x, face->c.y, face->c.z, texture_name, position);
-
-    // printf("\t\t[ (%lf %lf %lf), (%lf %lf %lf), (%lf %lf %lf), %s ]\n", face->v0.x, face->v0.y, face->v0.z, face->v1.x, face->v1.y, face->v1.z, face->v2.x, face->v2.y, face->v2.z, texture_name);
-
 
     // We need to calculate the planes normal and distance
     DoubleVector3 v0v1 = vec3_sub(face->v1, face->v0);
@@ -230,7 +218,8 @@ bool map_parse_brush_face(QMapParserState *state, const char *str, QMapFace *fac
     
     face->texture = arrlen(state->map.textureIndex);
     arrput(state->map.textureIndex, texName);
-    arrput(state->map.textureSizes, ((Vector2) {128, 128})); // Just set a default size
+    // arrput(state->map.textureSizes, ((Vector2) {128, 128})); // Just set a default size
+    arrput(state->map.textureSizes, ((Vector2) {(float) map_defaultTextureWidth, (float) map_defaultTextureHeight})); // Just set a default size
 
     return true;
 }
