@@ -71,7 +71,7 @@ bool map_parse_line(QMapParserState *state, char *buf, size_t buf_len) {
     } else if(state->parser_state == MPP_FILE) {
         if(strncmp(buf, "{", 1) == 0) {
             state->parser_state = MPP_ENTITY;
-            // printf("[ -- New QMapEntity -- ]\n");
+            printf("[ -- New QMapEntity -- ]\n");
 
             state->curEntity = map_entity_init();
         } else

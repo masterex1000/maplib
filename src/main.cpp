@@ -25,8 +25,59 @@ using std::cout;
 using std::cerr;
 using std::endl;
 
-void exportModelAsObj() {
+maptool::Model extractMapGeometry(QMapData &map, QMapMapGeometry &map_geo) {
+    maptool::ModelBuilder mb;
 
+    int asdf = arrlen(map.entitys);
+
+    for(int e = 0; e < arrlen(map.entitys); e++) {
+        QMapEntity *ent = &map.entitys[e];
+        QMapEntityGeometry *ent_geo = &map_geo.entitys[e];
+
+        // Iterate over all of this entity's brushes, building a list of used textures
+        std::set<int> usedTextures;
+
+        std::ostringstream objectNameStream;
+        objectNameStream << "Entity" << e;
+
+        mb.setObject(objectNameStream.str());
+
+        for(int b = 0; b < arrlen(ent->b); b++) {
+            QMapBrush *brush = &ent->b[b];
+
+            for(int f = 0; f < arrlen(brush->faces); f++)
+                usedTextures.insert(brush->faces[f].texture);
+        }
+
+        for(int texId : usedTextures) {
+            mb.setMaterial(map.textureIndex[texId]);
+
+            for(int b = 0; b < arrlen(ent->b); b++) {
+                QMapBrush *brush = &ent->b[b];
+                QMapBrushGeometry *brush_geo = &ent_geo->brushes[b];
+
+                for(int f = 0; f < arrlen(brush->faces); f++) {
+                    QMapFace *face = &brush->faces[f];
+                    QMapFaceGeometry *face_geo = &brush_geo->faces[f];
+
+                    if(face->texture != texId)
+                        continue;
+
+                    for(int i = 0; i < arrlen(face_geo->indices); i++) {
+                        QMapFaceVertex vert = face_geo->vertices[face_geo->indices[i]];
+
+                        Vector3 posVec  = DoubleVector3ToVector3(vert.pos);
+                        Vector3 normVec = DoubleVector3ToVector3(vert.normal);
+                        Vector2 texCoords = vert.uv;
+
+                        mb.addVertex(posVec, texCoords, normVec);
+                    }
+                }
+            }
+        }
+    }
+
+    return mb.getModel();
 }
 
 
@@ -58,8 +109,9 @@ int runApplication(const ApplicationOptions &options) {
     map_geo = map_generate_geometry(&map);
 
     // extract map geometry
+    maptool::Model mapGeometry = extractMapGeometry(map, map_geo);
     // write to obj file
-    // write entity definitions (probably just in the obj file as bad extension)
+    // write entity definitions (probably just in the obj file itself as a shitty unoffical extension)
 
     // buildObjFile(options, map, map_geo);
 

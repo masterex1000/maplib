@@ -55,6 +55,8 @@ public:
     void setMaterial(std::string material);
     void addVertex(Vector3 pos, Vector2 tex, Vector3 normal); // Every three calls is a triangle
 
+    Model getModel() { return model; }
+
 private:
     void updateCurrentObject();
     void updateCurrentMaterial();
