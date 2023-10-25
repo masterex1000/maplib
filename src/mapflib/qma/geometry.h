@@ -50,12 +50,15 @@ int sort_vertices_by_winding(const void *lhs_in, const void *rhs_in) {
     double lhs_angle = atan2(lhs_pv, lhs_pu);
     double rhs_angle = atan2(rhs_pv, rhs_pu);
 
-    if (lhs_angle < rhs_angle) {
-        return 1;
-    }
-    else if (lhs_angle > rhs_angle) {
+    // if (lhs_angle < rhs_angle)
+    //     return 1;
+    // else if (lhs_angle > rhs_angle)
+    //     return -1;
+
+    if (lhs_angle < rhs_angle)
         return -1;
-    }
+    else if (lhs_angle > rhs_angle)
+        return 1;
 
     return 0;
 }
@@ -311,23 +314,41 @@ Vector2 map_get_uv(DoubleVector3 vertex, const QMapFace *f, Vector2 texSize) {
     Vector2 uv;
     if(f->isValve) {
 
-        DoubleVector3 u_axis = f->vU.axis;
-        DoubleVector3 v_axis = f->vV.axis;
+        // DoubleVector3 u_axis = f->vU.axis;
+        // DoubleVector3 v_axis = f->vV.axis;
 
-        double u_shift = f->vU.offset;
-        double v_shift = f->vV.offset;
+        // double u_shift = f->vU.offset;
+        // double v_shift = f->vV.offset;
 
-        uv.x = vec3_dot(u_axis, vertex);
-        uv.y = vec3_dot(v_axis, vertex);
+        // uv.x = vec3_dot(u_axis, vertex);
+        // uv.y = vec3_dot(v_axis, vertex);
 
+        // uv.x /= texSize.x;
+        // uv.y /= texSize.y;
+
+        // uv.x /= f->tScaleX;
+        // uv.y /= f->tScaleY;
+
+        // uv.x += u_shift / texSize.x;
+        // uv.y += v_shift / texSize.y;
+
+        DoubleVector3 axisU = vec3_div_double(f->vU.axis, f->tScaleX);
+        DoubleVector3 axisV = vec3_div_double(f->vV.axis, f->tScaleY);
+
+        // uv.x = vertex.x * axisU.x + vertex.y * axisU.y + vertex.z * axisU.z;
+        // uv.y = vertex.x * axisV.x + vertex.y * axisV.y + vertex.z * axisV.z;
+
+        uv.x = vec3_dot(vertex, axisU);
+        uv.y = vec3_dot(vertex, axisV);
+
+        uv.x += f->vU.offset;
+        uv.y += f->vV.offset;
+        
         uv.x /= texSize.x;
         uv.y /= texSize.y;
 
-        uv.x /= f->tScaleX;
-        uv.y /= f->tScaleY;
-
-        uv.x += u_shift / texSize.x;
-        uv.y += v_shift / texSize.y;
+        uv.x *= -1;
+        uv.y *= -1;
 
     } else {
         double du = fabs(vec3_dot(f->normal, (DoubleVector3) {0, 0, 1}));

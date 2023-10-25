@@ -139,11 +139,11 @@ void writeObjectToFile(std::ofstream &out, const maptool::Model &model, const ma
 void writeVerticesToFile(std::ofstream &out, const maptool::Model &model) {
     // NOTE: Y AND Z ARE SWAPPED!!!! (swizzling)
     for(auto v : model.vertices)
-        out << "v " << -v.x << " " << v.z << " " << v.y << "\n";
+        out << "v " << v.x << " " << v.z << " " << v.y << "\n";
     for(auto v : model.textureVerts)
         out << "vt " << v.x << " " << v.y << "\n";
     for(auto v : model.normalVerts)
-        out << "vn " << -v.x << " " << v.z << " " << v.y << "\n";
+        out << "vn " << v.x << " " << v.z << " " << v.y << "\n";
 }
 
 void writeModelToFile(std::ofstream &out, const maptool::Model &model) {

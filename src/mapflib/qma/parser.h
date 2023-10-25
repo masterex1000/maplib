@@ -30,7 +30,9 @@ bool map_parse(const char *map_file, QMapData *data) {
     }
 
     int c;
-    char buf[255];
+    // char buf[255];
+    const size_t buf_size = 1024;
+    char buf[buf_size];
     int buf_len = 0;
 
     QMapParserState pstate;
@@ -38,7 +40,7 @@ bool map_parse(const char *map_file, QMapData *data) {
 
     pstate.map = map_mapdata_init();
 
-    memset(buf, 0, 255);
+    memset(buf, 0, buf_size);
 
     while((c = fgetc(file)) != EOF) {
         if(c == '\n') {
@@ -49,13 +51,13 @@ bool map_parse(const char *map_file, QMapData *data) {
                 return false;
             }
             
-            memset(buf, 0, 255);
+            memset(buf, 0, buf_size);
             buf_len = 0;
         } else {
             buf[buf_len] = c;
             buf_len++;
 
-            if(buf_len > 255) {
+            if(buf_len > (int) buf_size) {
                 printf("ERROR: Token To long\n");
                 return false;
             }
