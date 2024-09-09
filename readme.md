@@ -6,8 +6,8 @@ A small and simple generic `.map` file parser/converter/generator that spits out
 
 ### Output format
 
-The output of this program is a effectivly just a very slightly modified `.obj` file. It is the exact same as a standard obj file, except that
-it has a custom `eparam` extension to repersent an entity's parameters.
+The output of this program is a effectively just a very slightly modified `.obj` file. It is the exact same as a standard obj file, except that
+it has a custom `eparam` extension to represent an entity's parameters.
 
 eg.
 
@@ -24,14 +24,14 @@ eparam "classname" "worldspawn"
 ```
 
 From the above you should see the only real difference between a normal obj and this program's is the `eparam` keyword, which is used
-to repersent a single entity parameter.
+to represent a single entity parameter.
 
 ```
 eparam "<key>" "<value>"
 ```
 
 The extension simply consists of the `eparam` keyword, followed by a key/value pair. It should just be ignored by most readers,
-meaning this extension only does something on a compatible parser (eg. our custom one written for unity)
+meaning this extension only does something on a compatible parser (eg. my custom one written for unity)
 
 NOTE: the obj files *DO NOT* have an associated `.mtl` file with them. Instead, because this project is primarily designed to be
 used with unity, its assumed that the importer (which because you can't manually programmatically load obj files in unity) is custom
@@ -76,7 +76,7 @@ Just a couple links that are helpful for understanding the project/format
 https://book.leveldesignbook.com/appendix/resources/formats/map
 
 
-# Grammer
+# `.map` file grammer
 
 --- Defined by parser ---
 Number

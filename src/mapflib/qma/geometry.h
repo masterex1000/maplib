@@ -202,8 +202,6 @@ void map_generate_brush_geometry(QMapBrush *b, QMapBrushGeometry *g, bool phong,
                 
                 if(intersect_faces(b->faces[f0],b->faces[f1],b->faces[f2], &vertex)) {
                     if(vertex_in_hull(b->faces, arrlen(b->faces), vertex)) {
-                    // if(true) {
-                        
                         QMapFace *face = &(b->faces[f0]);
                         QMapFaceGeometry *face_geo = &g->faces[f0];
 
@@ -266,13 +264,7 @@ bool intersect_faces(QMapFace f0, QMapFace f1, QMapFace f2, DoubleVector3 *o_ver
     DoubleVector3 normal1 = f1.normal;
     DoubleVector3 normal2 = f2.normal;
 
-    // DoubleVector3 tmp = vec3_cross(normal0, normal1);
-
     double denom = vec3_dot(vec3_cross(normal0, normal1), normal2);
-
-    // if() {
-    //     printf("???\n");
-    // }
 
     if (denom < CMP_EPSILON) {
         return false;
