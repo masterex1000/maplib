@@ -33,9 +33,7 @@ eparam "<key>" "<value>"
 The extension simply consists of the `eparam` keyword, followed by a key/value pair. It should just be ignored by most readers,
 meaning this extension only does something on a compatible parser (eg. my custom one written for unity)
 
-NOTE: the obj files *DO NOT* have an associated `.mtl` file with them. Instead, because this project is primarily designed to be
-used with unity, its assumed that the importer (which because you can't manually programmatically load obj files in unity) is custom
-and will be able to resolve the material names itself to ones that exist in the project already.
+NOTE: the obj files *DO NOT* have an associated `.mtl` file with them. Instead, because this project was built with a custom .obj Unity importer in mind its left up to the importer to resolve the material names itself.
 
 # TODO
 
@@ -44,9 +42,9 @@ Theres still a lot of stuff I want to do with this project, but for now its in a
 - Make parser less fragile
     - Currently the parser *heavily* relies on reading a specific style of map file. Eg.
     comments *need* to take up an entire line with nothing else, parenthesis have to be in the
-    right places... It gets really annoying really fast. The goal would be to generalize the parser
+    right places... It gets really annoying really fast. The goal would be to generalize and make it more robust.
 - Rewrite parser
-    - Yeah, right below generalizing it. I've got another imp on another branch, but
+    - Yeah, right below generalizing it. I've got another implementation on another branch, but
     it doesn't have any of the geometry generating code, so that'll be a TODO right there
 - Proper memory managment
     - Currently qma (the subfolder for all the map code) is pretty lose with
@@ -60,14 +58,13 @@ Theres still a lot of stuff I want to do with this project, but for now its in a
     things like tool brushes
 - CSG
     - A HUGE one, but pretty nice to have. Theres a lot of hidden faces that could be culled out of the
-    map without any drawbacks. Its mostly I haven't been able to wrap my head around CSG algos yet.
+    map without any drawbacks. Its mostly because I haven't been able to wrap my head around any CSG algorithms yet.
 
-Most of these are tied to qma, which tbf is a project I originally built a few years ago, and have just been
-dragging along from project to project, all while willingly ignoring its issues.
+Most of these are specific to my qma library, which is a project I originally built a few years ago. I've have just been
+dragging it along from project to project while willingly ignoring all of its issues, so its got a bit a jank in it.
 
-My Ultimate goal with this project is to build a *decent* map file parser/generator library, which just happens
+My ultimate goal with this project is to eventually build a *decent* map file parser/generator library which just happens
 to ship with a nice cli too.
-
 
 # Helpful Links
 
@@ -78,6 +75,7 @@ https://book.leveldesignbook.com/appendix/resources/formats/map
 
 # `.map` file grammer
 
+```
 --- Defined by parser ---
 Number
 String
@@ -93,3 +91,4 @@ Brush -> "{" Vector3 Vector3 Vector3 String TextureAxis TextureAxis Number Numbe
 
 Vector3 -> "(" Number Number Number ")"
 TextureAxis -> "[" Number Number Number "]"
+```
